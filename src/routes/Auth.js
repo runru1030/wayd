@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faGoogle,
     faGithub,
-} from "@fortawesome/free-brands-svg-icons"; import { useEffect, useState } from "react";
+} from "@fortawesome/free-brands-svg-icons";
 ;
 const Auth = () => {
 
@@ -18,7 +18,20 @@ const Auth = () => {
         else if (name === "github") {
             provider = new firebaseInstance.auth.GithubAuthProvider();
         }
-        await authService.signInWithPopup(provider);
+        await authService.signInWithPopup(provider)
+            .then(async (result) => {
+                const User = result.user;
+
+                const IDcheck = await dbService
+                    .collection("User_Profile")
+                    .where("displayName", "==", User.displayName)
+                    .get();
+                if (IDcheck.docs.length != 0) {
+                    User.updateProfile({
+                        displayName: User.email,
+                    });
+                }
+            });
 
     }
     return (
@@ -26,7 +39,6 @@ const Auth = () => {
         <div class="Container">
 
             <img id="logo" src="logo.png" width="150px" />
-
             <AuthForm />
             <hr />
             <span>소셜 계정으로 로그인</span>

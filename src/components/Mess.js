@@ -1,17 +1,28 @@
-import { dbService, storageService } from "fbase";
-import REACT, { useState } from "react";
+import { authService, dbService, storageService } from "fbase";
+import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router";
 import { v4 as uuidv4 } from "uuid";
 import TextareaAutosize from "react-textarea-autosize";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEllipsisV, faTimes, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { faAt, faPlus, faHeart } from "@fortawesome/free-solid-svg-icons";
 
-const Mess = ({ messObj, isOwner}) => {
+import Modal from "./Modal";
+
+const Mess = ({ messObj, isOwner, userObj }) => {
     const [editing, setEditing] = useState(false);
     const [newMess, setNewMess] = useState(messObj.text);
     const [attachment, setAttachment] = useState("");
-    const [ProfileObj, setProfileObj] = useState(null);
-    const history=useHistory();
+    const [mention, setMention] = useState(messObj.mentionObj.mention);
+    const [mentionObj, setMentionObj] = useState({
+        text: "",//textfield's text
+        fromName: null,
+        toName: null,
+    });
+    const [isHeart, setIsHeart] = useState(false);
+    const [heartObjId, setHeartObjId] = useState("");
+
+    const history = useHistory();
+
     const onDelClick = async () => {
         const ok = window.confirm("내용을 정말 삭제하시겠습니까?");
         if (ok) {
@@ -30,24 +41,30 @@ const Mess = ({ messObj, isOwner}) => {
             });
         }
     }
-    const onProfileClick =async()=>{
-        
+    const onProfileClick = async () => {
+        const user = authService.currentUser;
+        if (user.uid == messObj.creatorId) history.push("/profile");
+        else {
             const userProfile = await dbService
-              .collection("User_Profile")
-              .where("email", "==", messObj.creatorEmail)
-              .get();
+                .collection("User_Profile")
+                .where("email", "==", messObj.creatorEmail)
+                .get();
             const profileArr = userProfile.docs.map((doc) => ({
-              id: doc.id,
-              ...doc.data()
+                id: doc.id,
+                ...doc.data()
             }))
-            setProfileObj(profileArr[0]);
-        history.push({pathname:"/profile", 
-        state:{ ProfileObj:{ProfileObj} ,isOwner:{isOwner}}}
-            
-        );
+            history.push({
+                pathname: "/userProfile",
+                state: { ProfileObj: profileArr[0], messObj: { messObj } }
+            });
+        }
     }
 
-    const toggleEditing = () => setEditing((prev) => !prev)
+    const toggleEditing = () => {
+        setEditing((prev) => !prev)
+        setNewMess(messObj.text);
+        setMention("")
+    }
 
     const onSubmit = async (event) => {
         event.preventDefault();
@@ -60,10 +77,14 @@ const Mess = ({ messObj, isOwner}) => {
         else {
             attachmentURL = messObj.attachmentURL;
         }
+
         await dbService.doc(`Messages/${messObj.id}`).update({
             text: newMess,
+            toName: mentionObj.toName,
+            mentionObj: mentionObj,
             attachmentURL,
         });
+
         setEditing(false);
         onClearAttachment();
     }
@@ -71,6 +92,17 @@ const Mess = ({ messObj, isOwner}) => {
     const onChange = (event) => {
         const { target: { value } } = event;
         setNewMess(value);
+
+        var idx = value.search("@");
+        if (idx != -1) {
+            const ment = value.split(" ").filter(it => it.includes("@")).toString();
+            setMention(ment.substring(1, ment.length));
+            setMentionObj({
+                text: "님이 언급하셨습니다.",//textfield's text
+                fromName: userObj.displayName,
+                toName: ment.substring(1, ment.length),
+            })
+        }
     };
     const onFileChange = (event) => {
         const { target: { files } } = event;
@@ -82,9 +114,38 @@ const Mess = ({ messObj, isOwner}) => {
         };
         reader.readAsDataURL(theFile);
 
-
     };
+
     const onClearAttachment = () => setAttachment("")
+    const onHeartClick = async () => {
+        if (isHeart) {
+            dbService.doc(`${messObj.id}/${heartObjId.id}`).delete();
+            await dbService.doc(`Messages/${messObj.id}`).update({
+                heart: messObj.heart - 1
+            });
+        }
+        else {
+            const heartObj = {
+                userId: userObj.displayName,
+            }
+            await dbService.collection(`${messObj.id}`).add(heartObj);//add this doc to collection named "messages" 
+            await dbService.doc(`Messages/${messObj.id}`).update({
+                heart: messObj.heart + 1
+            });
+        }
+
+    }
+    useEffect(() => {
+        dbService.collection(`${messObj.id}`).where("userId", "==", userObj.displayName).onSnapshot((snapshot) => {
+            const alertArr = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            })); //get messages f/set messages to show all messages in db
+            if (alertArr.length == 0) setIsHeart(false);
+            else setIsHeart(true);
+            if (alertArr.length == 1) setHeartObjId(alertArr[0]);
+        }) //get messages from db
+    }, [])
 
     return (
         <div class="messContainer">
@@ -96,26 +157,29 @@ const Mess = ({ messObj, isOwner}) => {
             </div>
 
             <div class="moreDiv">
-                <span>{messObj.createAtDetail.split(" ").map(function (value, index) {
+                <span id="time">{messObj.createAtDetail.split(" ").map(function (value, index) {
                     if (index == 1 || index == 2 || index == 4) return value + " ";
                 })}
                 </span>
                 {isOwner && !editing && (
                     <>
-                        <details>
-                            <summary><FontAwesomeIcon icon={faEllipsisV} /></summary>
-                            <ul>
-                                <li><button id="delBtn" onClick={onDelClick}>삭제</button></li>
-                                <li><button onClick={toggleEditing}>수정</button></li>
-                            </ul>
-                        </details>
+                        <Modal>
+                            <div className="modalChildren">
+                                <button onClick={toggleEditing}>수정</button>
+                                <button id="delBtn" onClick={onDelClick}>삭제</button>
+                            </div>
+                        </Modal>
+
                     </>)}
             </div>
 
             {editing ?
                 <>
+                    {mention && <div className="mention"><span><FontAwesomeIcon icon={faAt} id="at" /> {mention}</span></div>}
+
                     <form onSubmit={onSubmit} class="editForm">
-                        {!messObj.attachmentURL && <label for="attach-file2" className="file_label3"><FontAwesomeIcon icon={faPlus} /></label>}
+
+                        {!messObj.attachmentURL && <label for="attach-file2" className="file_label file_label3"><FontAwesomeIcon icon={faPlus} /></label>}
                         <TextareaAutosize id="messText" onChange={onChange} value={newMess} type="text" required />
                         <input id="attach-file2" type="file" accept="image/*" onChange={onFileChange} style={{ display: 'none' }} />
                         {messObj.attachmentURL && <div>
@@ -146,7 +210,10 @@ const Mess = ({ messObj, isOwner}) => {
                     })}
                     </div>
                     {messObj.attachmentURL && <img src={messObj.attachmentURL} width="100%" />}
-
+                    <div className="heart">
+                        {isHeart ? <FontAwesomeIcon id="icon" icon={faHeart} color="#a84848" onClick={onHeartClick} /> : <FontAwesomeIcon id="icon" icon={faHeart} onClick={onHeartClick} />}
+                        <span>{messObj.heart}</span>
+                    </div>
                 </>
             }
         </div>

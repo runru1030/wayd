@@ -23,9 +23,9 @@ const Home = ({ userObj }) => {
         <div class="Container">
             <img id="logo" name="home" src="logo.png" width="150px" />
             <MessForm userObj={userObj} />
-            <div>
+            <div class="messCotainer1">
                 {messages.map((mess) => (
-                    <Mess key={mess.id} messObj={mess} useState={userObj} isOwner={mess.creatorId == userObj.uid} />
+                    <Mess key={mess.id} messObj={mess} userObj={userObj} isOwner={mess.creatorId == userObj.uid} />
                 )).reverse()}
             </div>
         </div>
