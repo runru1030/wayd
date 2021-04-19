@@ -53,11 +53,14 @@ const AuthForm = () => {
         }
     };
 
-    const toggleAccount = () => setNewAccount(prev => !prev);
+    const toggleAccount = () => {
+        setNewAccount(prev => !prev)
+        setError("");
+    };
 
     return (
         <>
-            <form class="centerContainer authForm" onSubmit={onSubmit}>
+            <form className="centerContainer authForm" onSubmit={onSubmit}>
                 {newAccount ? (<>
                     <div><span>Email</span>
                         <input name="email" type="text" placeholder="Email Adress" required value={authObj.email} onChange={onChange} />

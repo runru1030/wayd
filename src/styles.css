@@ -139,8 +139,9 @@ hr{
     padding: 0;
 }
 #messText{
-    width: 70%;
-    padding: 10px 20px;
+    width: 60%;
+    padding: 10px 15px;
+    padding-right: 60px;
     margin-left: 10px;
     background-color: #ffffff09;
     border: thin solid rgba(255, 255, 255, 0.075);
@@ -153,10 +154,9 @@ hr{
 }
 .editForm #messText{
     background-color: rgba(255, 255, 255, 0);
-    width: 80%;
+    width: 70%;
     margin: 10px;
     margin-top: 0;
-    
 }
 .file_label{
     position: absolute;
@@ -166,13 +166,18 @@ hr{
     cursor: pointer;
 }
 .file_label3{
-    transform: translate(270px,10px);
+    transform: translate(270px,85px);
 }
 .attachment{
    padding: 15px;
    padding-top: 0;
    width: 80%;
 }
+.attachment2{
+    padding: 10px;
+    padding-top: 5px;
+    width: 90%;
+ }
 #attachmentDel{
     color: rgb(168, 72, 72);
     cursor: pointer;
@@ -188,7 +193,8 @@ hr{
     margin-right: 10px;
 }
 .messContent{
-    margin: 10px;
+    margin: 5px 15px;
+    font-size: small;
 }
 .messProfile{
     display: flex;
@@ -419,27 +425,27 @@ footer hr{
 }
 /*mention*/
 .mention{
-    background-color: #a5d89f73;
-    display: inline;
+    display: flex;
     margin: 10px;
     padding-bottom: 5px;
-    border-radius: 5px;
-    color: rgb(9, 66, 109);
-    
 }
 #at{
-    color: rgb(9, 66, 109);
+    color: #739b6f;
 }
 .mention span{
     display: inline-block;
-    padding: 2px;
+    padding: 7px 10px;
+    margin: 0;
+    background-color: #a3a3a317;
+    border-radius: 3px;
 }
 #to{
     font-size: 0.5rem;
     color: rgb(175, 175, 175);
 }
-.messContainer .mention{
-    padding: 5px;
+.messContainer .mention span{
+    padding: 5px 10px;
+    margin-top: 5px;
 }
 /*heart*/
 .heart{
@@ -447,6 +453,7 @@ footer hr{
     display: flex;
     width: 100px;
     margin: 20px 10px;
+    margin-bottom: 0;
 }
 .heart #icon:active{
     animation-duration: 2s;
@@ -464,4 +471,20 @@ footer hr{
 .heart span{
     color: rgba(255, 255, 255, 0.589);
     transform: translate(-2px, -8px);
+}
+#addMention #at{
+    position: absolute;
+    transform: translate(235px, 8px);
+    font-size: small;
+    background-color: #a5d89f4f;
+    color: white;
+    padding: 3px;
+    border-radius: 50px;
+}
+.editForm #addMention #at{
+    
+    transform: translate(230px, 72px);
+}
+#alertDot{
+    color: #a84848;
 }

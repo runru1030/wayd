@@ -12,7 +12,7 @@ const Mess = ({ messObj, isOwner, userObj }) => {
     const [editing, setEditing] = useState(false);
     const [newMess, setNewMess] = useState(messObj.text);
     const [attachment, setAttachment] = useState("");
-    const [mention, setMention] = useState(messObj.mentionObj.mention);
+    const [mention, setMention] = useState(messObj.mentionObj.toName);
     const [mentionObj, setMentionObj] = useState({
         text: "",//textfield's text
         fromName: null,
@@ -20,7 +20,6 @@ const Mess = ({ messObj, isOwner, userObj }) => {
     });
     const [isHeart, setIsHeart] = useState(false);
     const [heartObjId, setHeartObjId] = useState("");
-
     const history = useHistory();
 
     const onDelClick = async () => {
@@ -63,7 +62,6 @@ const Mess = ({ messObj, isOwner, userObj }) => {
     const toggleEditing = () => {
         setEditing((prev) => !prev)
         setNewMess(messObj.text);
-        setMention("")
     }
 
     const onSubmit = async (event) => {
@@ -77,14 +75,18 @@ const Mess = ({ messObj, isOwner, userObj }) => {
         else {
             attachmentURL = messObj.attachmentURL;
         }
-
+        if(mention&&messObj.mentionObj.toName!=mention){
+            await dbService.collection(`${mention}`).add({
+                alert: 1,
+            })
+        }
         await dbService.doc(`Messages/${messObj.id}`).update({
             text: newMess,
             toName: mentionObj.toName,
             mentionObj: mentionObj,
             attachmentURL,
         });
-
+        
         setEditing(false);
         onClearAttachment();
     }
@@ -92,7 +94,6 @@ const Mess = ({ messObj, isOwner, userObj }) => {
     const onChange = (event) => {
         const { target: { value } } = event;
         setNewMess(value);
-
         var idx = value.search("@");
         if (idx != -1) {
             const ment = value.split(" ").filter(it => it.includes("@")).toString();
@@ -146,17 +147,19 @@ const Mess = ({ messObj, isOwner, userObj }) => {
             if (alertArr.length == 1) setHeartObjId(alertArr[0]);
         }) //get messages from db
     }, [])
-
+    const onMentionClick=()=>{
+        setNewMess(newMess+"@");
+    }
     return (
-        <div class="messContainer">
-            <div class="messProfile">
-                <div class="profilePhoto" onClick={onProfileClick}>
+        <div className="messContainer">
+            <div className="messProfile">
+                <div className="profilePhoto" onClick={onProfileClick}>
                     <img src={messObj.creatorPhoto ? messObj.creatorPhoto : "user.png"} />
                 </div>
                 <span>{messObj.creatorName}</span>
             </div>
 
-            <div class="moreDiv">
+            <div className="moreDiv">
                 <span id="time">{messObj.createAtDetail.split(" ").map(function (value, index) {
                     if (index == 1 || index == 2 || index == 4) return value + " ";
                 })}
@@ -175,11 +178,12 @@ const Mess = ({ messObj, isOwner, userObj }) => {
 
             {editing ?
                 <>
-                    {mention && <div className="mention"><span><FontAwesomeIcon icon={faAt} id="at" /> {mention}</span></div>}
-
-                    <form onSubmit={onSubmit} class="editForm">
-
+                    <form onSubmit={onSubmit} className="editForm">
+                    <span onClick={onMentionClick} id="addMention"><FontAwesomeIcon icon={faAt} id="at" /></span>
+                    {mention && <div className="mention"><span>To : <FontAwesomeIcon icon={faAt} id="at" /> {mention}</span></div>}
+                    
                         {!messObj.attachmentURL && <label for="attach-file2" className="file_label file_label3"><FontAwesomeIcon icon={faPlus} /></label>}
+                        
                         <TextareaAutosize id="messText" onChange={onChange} value={newMess} type="text" required />
                         <input id="attach-file2" type="file" accept="image/*" onChange={onFileChange} style={{ display: 'none' }} />
                         {messObj.attachmentURL && <div>
@@ -190,7 +194,7 @@ const Mess = ({ messObj, isOwner, userObj }) => {
                             <span id="attachmentDel" onClick={onClearAttachment}>사진 취소</span>
                             <img src={attachment} width="100%" />
                         </div>}
-                        <div class="btns">
+                        <div className="btns">
                             <button id="delBtn" onClick={onDelClick}>삭제</button>
                             <button onClick={toggleEditing}>취소</button>
                             <input type="submit" value="완료"></input>
@@ -200,16 +204,18 @@ const Mess = ({ messObj, isOwner, userObj }) => {
                 </>
                 :
                 <>
-                    <div class="messContent">{messObj.text.split("\n").map((line) => {
+                    {mention && <div className="mention"><span>To : <FontAwesomeIcon icon={faAt} id="at" /> {mention}</span></div>}
+                   
+                    <div className="messContent">{messObj.text.split("\n").map((line) => {
                         return (
                             <h4>
-                                {line}
+                                {line.split(" ").filter(it => !it.includes("@"))}
                                 <br />
                             </h4>
                         );
                     })}
                     </div>
-                    {messObj.attachmentURL && <img src={messObj.attachmentURL} width="100%" />}
+                    {messObj.attachmentURL && <img src={messObj.attachmentURL} className="attachment2" />}
                     <div className="heart">
                         {isHeart ? <FontAwesomeIcon id="icon" icon={faHeart} color="#a84848" onClick={onHeartClick} /> : <FontAwesomeIcon id="icon" icon={faHeart} onClick={onHeartClick} />}
                         <span>{messObj.heart}</span>

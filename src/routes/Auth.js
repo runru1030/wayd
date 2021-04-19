@@ -36,13 +36,13 @@ const Auth = () => {
     }
     return (
 
-        <div class="Container">
+        <div className="Container">
 
             <img id="logo" src="logo.png" width="150px" />
             <AuthForm />
             <hr />
             <span>소셜 계정으로 로그인</span>
-            <div class="authBtns">
+            <div className="authBtns">
                 <button onClick={onSocialClick} name="google" ><FontAwesomeIcon icon={faGoogle} /> </button>
                 <button onClick={onSocialClick} name="github"><FontAwesomeIcon icon={faGithub} /></button>
             </div>

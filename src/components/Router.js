@@ -3,7 +3,7 @@ import { HashRouter as Router, Route, Switch } from "react-router-dom";
 import Auth from "routes/Auth";
 import Home from "routes/Home";
 import Navigation from "components/Navigation";
-import Profile from "routes/Profile";
+import Profile from "routes/Profile"; 
 import UesrProfile from "routes/UesrProfile";
 import Alert from "routes/Alert";
 

@@ -37,7 +37,14 @@ const MessForm = ({ userObj }) => {
             attachmentURL,
         }
         await dbService.collection("Messages").add(messObj);//add this doc to collection named "messages" 
-
+        if(mention){
+            const alertObj={
+                alert: 1,
+                from:userObj.displayName,
+            }
+            await dbService.collection(`${mention}`).add(alertObj);
+            console.log("d");
+        }
         setmess("");
         setAttachment("");
         setMention("");
@@ -73,14 +80,19 @@ const MessForm = ({ userObj }) => {
 
     };
     const onClearAttachment = () => setAttachment("")
-
+    const onMentionClick=()=>{
+        setmess(mess+"@");
+    }
     return (<>
         <head><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" /></head>
-
-        <form onSubmit={onSubmit} class="messForm">
-            {mention && <div className="mention"><span><FontAwesomeIcon icon={faAt} id="at" /> {mention}</span></div>}
-
+        
+       
+        <form onSubmit={onSubmit} className="messForm">
             <div>
+            
+                {mention && <div className="mention"><span>To : <FontAwesomeIcon icon={faAt} id="at" /> {mention}</span></div>} 
+                <span onClick={onMentionClick} id="addMention"><FontAwesomeIcon icon={faAt} id="at" /></span>
+                
                 <label for="attach-file" className="file_label">
                     <FontAwesomeIcon icon={faPlus} />
                 </label>
@@ -90,7 +102,7 @@ const MessForm = ({ userObj }) => {
             </div>
 
             <input id="attach-file" type="file" accept="image/*" onChange={onFileChange} style={{ display: 'none' }} />
-            {attachment && <div class="attachment">
+            {attachment && <div className="attachment">
 
                 <span id="attachmentDel" onClick={onClearAttachment}>사진 취소</span>
                 <img src={attachment} width="100%" />

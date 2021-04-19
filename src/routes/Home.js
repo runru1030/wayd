@@ -15,15 +15,16 @@ const Home = ({ userObj }) => {
             })); //get messages from db
             setmessages(messArr);//set messages to show all messages in db
         })
+
     }, []);
 
 
 
     return (
-        <div class="Container">
+        <div className="Container">
             <img id="logo" name="home" src="logo.png" width="150px" />
             <MessForm userObj={userObj} />
-            <div class="messCotainer1">
+            <div className="messCotainer1">
                 {messages.map((mess) => (
                     <Mess key={mess.id} messObj={mess} userObj={userObj} isOwner={mess.creatorId == userObj.uid} />
                 )).reverse()}

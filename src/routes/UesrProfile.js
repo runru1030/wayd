@@ -41,9 +41,9 @@ export default () => {
     }
     return (
         <>
-            <div class="Container">
-                <div class="showProfile">
-                    <div class="profilePhoto">
+            <div className="Container">
+                <div className="showProfile">
+                    <div className="profilePhoto">
                         <img src={photo ? photo : "user.png"} />
                     </div>
                     <ul>

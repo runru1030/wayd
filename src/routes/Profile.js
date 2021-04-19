@@ -113,35 +113,35 @@ export default ({ refreshUser, userObj, ProfileObj }) => {
     };
     return (
         <>
-            <div class="Container">
+            <div className="Container">
 
                 {editing ?
-                    <form class="editProfileForm" onSubmit={onSubmit}>
-                        <div class="centerContainer photoChange">
-                            <div class="profilePhoto">
+                    <form className="editProfileForm" onSubmit={onSubmit}>
+                        <div className="centerContainer photoChange">
+                            <div className="profilePhoto">
                                 <img src={attachment ? attachment : (userObj.photoURL ? userObj.photoURL : "user.png")} />
                             </div>
-                            <label for="changefile" class="file_label2">프로필 사진 바꾸기</label>
+                            <label for="changefile" className="file_label2">프로필 사진 바꾸기</label>
                             <input id="changefile" type="file" accept="image/*" onChange={onFileChange} style={{ display: 'none' }} />
                         </div>
-                        <div class="centerContainer editWrapper">
-                            <div class="editBox">
+                        <div className="centerContainer editWrapper">
+                            <div className="editBox">
                                 <span>사용자 이름</span>
                                 <input name="displayName" type="text" placeholder={ProfileObj.displayName} onChange={onChange} />
                             </div>
                             <span id="checkMess">{checkError}</span>
 
-                            <div class="editBox">
+                            <div className="editBox">
                                 <span>이름</span>
                                 <input name="name" type="text" placeholder={ProfileObj.name} onChange={onChange} />
                             </div>
-                            <div class="editBox">
+                            <div className="editBox">
                                 <span>Instagram 아이디</span>
                                 <input name="instagramId" type="text" placeholder={ProfileObj.instagramId} onChange={onChange} />
                             </div>
                         </div>
                         <span id="error">{error}</span>
-                        <div class="centerContainer btns">
+                        <div className="centerContainer btns">
                             <button onClick={onCancleClick}>취소</button>
                             <input type="submit" value="완료" />
                         </div>
@@ -149,8 +149,8 @@ export default ({ refreshUser, userObj, ProfileObj }) => {
                     </form>
                     :
                     <>
-                        <div class="showProfile">
-                            <div class="profilePhoto">
+                        <div className="showProfile">
+                            <div className="profilePhoto">
                                 <img src={userObj.photoURL ? userObj.photoURL : "user.png"} />
                             </div>
                             <ul>
