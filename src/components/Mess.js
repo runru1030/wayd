@@ -19,9 +19,8 @@ const Mess = ({ messObj, isOwner, userObj }) => {
         toName: null,
     });
     const [isHeart, setIsHeart] = useState(false);
-    const [heartObjId, setHeartObjId] = useState("");
+    const [heart, setHeart] = useState(0);
     const history = useHistory();
-
     const onDelClick = async () => {
         const ok = window.confirm("내용을 정말 삭제하시겠습니까?");
         if (ok) {
@@ -75,9 +74,13 @@ const Mess = ({ messObj, isOwner, userObj }) => {
         else {
             attachmentURL = messObj.attachmentURL;
         }
-        if(mention&&messObj.mentionObj.toName!=mention){
-            await dbService.collection(`${mention}`).add({
-                alert: 1,
+        if (mention && messObj.mentionObj.toName != mention) {
+            const getCollection = await dbService.collection("User_Profile").where("displayName", "==", mention).get();
+            getCollection.docs.map((doc) => {
+                console.log(doc.id)
+                dbService.doc(`User_Profile/${doc.id}`).update({
+                    Alert: true,
+                })
             })
         }
         await dbService.doc(`Messages/${messObj.id}`).update({
@@ -86,7 +89,7 @@ const Mess = ({ messObj, isOwner, userObj }) => {
             mentionObj: mentionObj,
             attachmentURL,
         });
-        
+
         setEditing(false);
         onClearAttachment();
     }
@@ -119,36 +122,49 @@ const Mess = ({ messObj, isOwner, userObj }) => {
 
     const onClearAttachment = () => setAttachment("")
     const onHeartClick = async () => {
+
         if (isHeart) {
-            dbService.doc(`${messObj.id}/${heartObjId.id}`).delete();
-            await dbService.doc(`Messages/${messObj.id}`).update({
-                heart: messObj.heart - 1
+            await dbService.doc(`Mess_More/${messObj.id}`).get().then(async (doc) => {
+                await dbService.doc(`Mess_More/${messObj.id}`).update({
+                    heart: doc.data().heart - 1,
+                    heart_ID: doc.data().heart_ID.filter(it => it != userObj.uid)
+                })
+
             });
+
         }
         else {
-            const heartObj = {
-                userId: userObj.displayName,
-            }
-            await dbService.collection(`${messObj.id}`).add(heartObj);//add this doc to collection named "messages" 
-            await dbService.doc(`Messages/${messObj.id}`).update({
-                heart: messObj.heart + 1
+            await dbService.doc(`Mess_More/${messObj.id}`).get().then(async (doc) => {
+                if (doc.exists) {
+                    await dbService.collection("Mess_More").doc(`${messObj.id}`).set({
+                        heart: doc.data().heart + 1,
+                        heart_ID: [...doc.data().heart_ID, userObj.uid]
+                    })
+                } else {
+                    await dbService.collection("Mess_More").doc(`${messObj.id}`).set({
+                        heart: 1,
+                        heart_ID: [userObj.uid]
+                    })
+                }
+
             });
+
         }
+        setIsHeart((prev) => !prev);
 
     }
     useEffect(() => {
-        dbService.collection(`${messObj.id}`).where("userId", "==", userObj.displayName).onSnapshot((snapshot) => {
-            const alertArr = snapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            })); //get messages f/set messages to show all messages in db
-            if (alertArr.length == 0) setIsHeart(false);
-            else setIsHeart(true);
-            if (alertArr.length == 1) setHeartObjId(alertArr[0]);
-        }) //get messages from db
+        dbService.doc(`Mess_More/${messObj.id}`).onSnapshot(async (doc) => {
+            if (doc.exists) {
+                setHeart(doc.data().heart);
+            } else {
+                setHeart(0);
+            }
+
+        });
     }, [])
-    const onMentionClick=()=>{
-        setNewMess(newMess+"@");
+    const onMentionClick = () => {
+        setNewMess(newMess + "@");
     }
     return (
         <div className="messContainer">
@@ -179,11 +195,11 @@ const Mess = ({ messObj, isOwner, userObj }) => {
             {editing ?
                 <>
                     <form onSubmit={onSubmit} className="editForm">
-                    <span onClick={onMentionClick} id="addMention"><FontAwesomeIcon icon={faAt} id="at" /></span>
-                    {mention && <div className="mention"><span>To : <FontAwesomeIcon icon={faAt} id="at" /> {mention}</span></div>}
-                    
+                        <span onClick={onMentionClick} id="addMention"><FontAwesomeIcon icon={faAt} id="at" /></span>
+                        {mention && <div className="mention"><span>To : <FontAwesomeIcon icon={faAt} id="at" /> {mention}</span></div>}
+
                         {!messObj.attachmentURL && <label for="attach-file2" className="file_label file_label3"><FontAwesomeIcon icon={faPlus} /></label>}
-                        
+
                         <TextareaAutosize id="messText" onChange={onChange} value={newMess} type="text" required />
                         <input id="attach-file2" type="file" accept="image/*" onChange={onFileChange} style={{ display: 'none' }} />
                         {messObj.attachmentURL && <div>
@@ -205,7 +221,7 @@ const Mess = ({ messObj, isOwner, userObj }) => {
                 :
                 <>
                     {mention && <div className="mention"><span>To : <FontAwesomeIcon icon={faAt} id="at" /> {mention}</span></div>}
-                   
+
                     <div className="messContent">{messObj.text.split("\n").map((line) => {
                         return (
                             <h4>
@@ -218,7 +234,7 @@ const Mess = ({ messObj, isOwner, userObj }) => {
                     {messObj.attachmentURL && <img src={messObj.attachmentURL} className="attachment2" />}
                     <div className="heart">
                         {isHeart ? <FontAwesomeIcon id="icon" icon={faHeart} color="#a84848" onClick={onHeartClick} /> : <FontAwesomeIcon id="icon" icon={faHeart} onClick={onHeartClick} />}
-                        <span>{messObj.heart}</span>
+                        <span>{heart}</span>
                     </div>
                 </>
             }

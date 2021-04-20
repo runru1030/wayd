@@ -25,7 +25,7 @@ function App() {
             instagramId: "",
           });
         }
-        
+
         setUserObj({
           displayName: user.displayName,
           uid: user.uid,
@@ -34,9 +34,9 @@ function App() {
           updateProfile: (args) => user.updateProfile(args),
         });
         getMyProfile(user.email);
-      } 
-      else   setUserObj(null);
-      
+      }
+      else setUserObj(null);
+
       setinit(true);
     })
 

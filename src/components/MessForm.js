@@ -31,19 +31,25 @@ const MessForm = ({ userObj }) => {
             creatorEmail: userObj.email,
             creatorName: userObj.displayName,
             creatorPhoto: userObj.photoURL,
-            heart: 0,
             toName: mentionObj.toName,
             mentionObj: mentionObj,
             attachmentURL,
         }
         await dbService.collection("Messages").add(messObj);//add this doc to collection named "messages" 
-        if(mention){
-            const alertObj={
-                alert: 1,
-                from:userObj.displayName,
-            }
-            await dbService.collection(`${mention}`).add(alertObj);
-            console.log("d");
+        await dbService.collection("Mess_More").doc(`${messObj.id}`).set({
+                heart:0,
+                heart_ID: null,
+        });
+        if (mention) {
+
+            const getCollection = await dbService.collection("User_Profile").where("displayName", "==", mention).get();
+            getCollection.docs.map((doc) => {
+                console.log(doc.id)
+                dbService.doc(`User_Profile/${doc.id}`).update({
+                    Alert: true,
+                })
+            })
+
         }
         setmess("");
         setAttachment("");
@@ -80,19 +86,19 @@ const MessForm = ({ userObj }) => {
 
     };
     const onClearAttachment = () => setAttachment("")
-    const onMentionClick=()=>{
-        setmess(mess+"@");
+    const onMentionClick = () => {
+        setmess(mess + "@");
     }
     return (<>
         <head><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" /></head>
-        
-       
+
+
         <form onSubmit={onSubmit} className="messForm">
             <div>
-            
-                {mention && <div className="mention"><span>To : <FontAwesomeIcon icon={faAt} id="at" /> {mention}</span></div>} 
+
+                {mention && <div className="mention"><span>To : <FontAwesomeIcon icon={faAt} id="at" /> {mention}</span></div>}
                 <span onClick={onMentionClick} id="addMention"><FontAwesomeIcon icon={faAt} id="at" /></span>
-                
+
                 <label for="attach-file" className="file_label">
                     <FontAwesomeIcon icon={faPlus} />
                 </label>

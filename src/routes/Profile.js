@@ -73,6 +73,7 @@ export default ({ refreshUser, userObj, ProfileObj }) => {
         event.preventDefault();
         let attachmentURL = "";
         console.log(attachment);
+        const user = authService.currentUser;
         try {
             if (!dpNameCheck) throw new Error('Display Name을 확인해주세요.');
             if (attachment !== "") {
@@ -88,7 +89,7 @@ export default ({ refreshUser, userObj, ProfileObj }) => {
                 instagramId: Profile.instagramId,
             });
 
-            await userObj.updateProfile({
+            await user.updateProfile({
                 displayName: Profile.displayName,
                 photoURL: attachmentURL,
             });

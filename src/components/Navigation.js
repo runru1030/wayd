@@ -9,24 +9,20 @@ const Navigation = ({ userObj }) => {
     const location = useLocation();
     const [alert, setAlert] = useState(false);//to show all messages in db
 
-     useEffect(() => {
- 
-        dbService.collection(`${userObj.displayName}`).onSnapshot((snapshot) => {
-            const alertArr = snapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            })); //get messages from db
-            console.log(alertArr.length);//set messages to show all messages in db
-            if(alertArr.length>0)setAlert(true);
-            else setAlert(false)
+    useEffect(() => {
+
+        dbService.collection("User_Profile").where("displayName", "==", userObj.displayName).onSnapshot((snapshot) => {
+            const getArr = snapshot.docs[0].data();
+            if (getArr.Alert) setAlert(true);
+            else setAlert(false);
         })
-    }, []); 
+    }, []);
 
     return (<>
         {location.pathname == "/" ?
             <nav>
 
-                <Link to="/alert" id="bell">{alert&&<FontAwesomeIcon icon={faCircle} id="alerDot" />}<FontAwesomeIcon icon={faBell} /> </Link>
+                <Link to="/alert" id="bell">{alert && <FontAwesomeIcon icon={faCircle} id="alertDot" />}<FontAwesomeIcon icon={faBell} /> </Link>
                 <div className="profilePhoto">
                     <Link to="/profile"><img src={userObj.photoURL ? userObj.photoURL : "user.png"} /></Link>
                 </div>

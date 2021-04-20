@@ -7,24 +7,29 @@ import { useLocation } from 'react-router';
 export default ({ userObj }) => {
 
     const [alerts, setAlerts] = useState([]);//to show all messages in db
-
-    dbService.collection(`${userObj.displayName}`).OnSnapshot((snapshot) => {
-        snapshot.docs.forEach((doc) => {
-            dbService.collection(`${userObj.displayName}`).doc(doc.id).delete()
-        })
-        
-    }) 
+    const location = useLocation();
 
 
-    useEffect(() => {
+    useEffect(async () => {
         dbService.collection("Messages").where("toName", "==", userObj.displayName).orderBy("createAt").onSnapshot((snapshot) => {
             const alertArr = snapshot.docs.map((doc) => ({
                 id: doc.id,
                 ...doc.data(),
-            })); 
+            }));
+            setAlerts(alertArr);
         })
-        
-        
+
+        const userProfile = await dbService
+            .collection("User_Profile")
+            .where("displayName", "==", userObj.displayName)
+            .get();
+        userProfile.docs.map((doc) => {
+            dbService.doc(`User_Profile/${doc.id}`).update({
+                Alert: false,
+            })
+        })
+
+
     }, []);
 
     return (
