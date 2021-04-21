@@ -4,9 +4,10 @@ import { useHistory } from "react-router";
 import { v4 as uuidv4 } from "uuid";
 import TextareaAutosize from "react-textarea-autosize";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAt, faPlus, faHeart } from "@fortawesome/free-solid-svg-icons";
+import { faAt, faPlus, faHeart, faEllipsisV } from "@fortawesome/free-solid-svg-icons";
 
 import Modal from "./Modal";
+import Comment from "./Comment";
 
 const Mess = ({ messObj, isOwner, userObj }) => {
     const [editing, setEditing] = useState(false);
@@ -20,13 +21,14 @@ const Mess = ({ messObj, isOwner, userObj }) => {
     });
     const [isHeart, setIsHeart] = useState(false);
     const [heart, setHeart] = useState(0);
+    const [isOpenModal, setIsOpenModal] = useState(false);
+
     const history = useHistory();
     const onDelClick = async () => {
         const ok = window.confirm("내용을 정말 삭제하시겠습니까?");
         if (ok) {
             await dbService.doc(`Messages/${messObj.id}`).delete();
             await storageService.refFromURL(messObj.attachmentURL).delete();
-            console.log(messObj.attachmentURL)
         }
     }
     const onDelPhotoClick = async () => {
@@ -53,7 +55,7 @@ const Mess = ({ messObj, isOwner, userObj }) => {
             }))
             history.push({
                 pathname: "/userProfile",
-                state: { ProfileObj: profileArr[0], messObj: { messObj } }
+                state: { ProfileObj: profileArr[0]}
             });
         }
     }
@@ -77,7 +79,6 @@ const Mess = ({ messObj, isOwner, userObj }) => {
         if (mention && messObj.mentionObj.toName != mention) {
             const getCollection = await dbService.collection("User_Profile").where("displayName", "==", mention).get();
             getCollection.docs.map((doc) => {
-                console.log(doc.id)
                 dbService.doc(`User_Profile/${doc.id}`).update({
                     Alert: true,
                 })
@@ -95,7 +96,7 @@ const Mess = ({ messObj, isOwner, userObj }) => {
     }
 
     const onChange = (event) => {
-        const { target: { value } } = event;
+        const { target: { value, name } } = event;
         setNewMess(value);
         var idx = value.search("@");
         if (idx != -1) {
@@ -108,6 +109,7 @@ const Mess = ({ messObj, isOwner, userObj }) => {
             })
         }
     };
+
     const onFileChange = (event) => {
         const { target: { files } } = event;
         const theFile = files[0];
@@ -150,13 +152,16 @@ const Mess = ({ messObj, isOwner, userObj }) => {
             });
 
         }
-        setIsHeart((prev) => !prev);
 
     }
     useEffect(() => {
         dbService.doc(`Mess_More/${messObj.id}`).onSnapshot(async (doc) => {
             if (doc.exists) {
                 setHeart(doc.data().heart);
+                if (doc.data().heart_ID.includes(userObj.uid)) setIsHeart(true);
+                else setIsHeart(false);
+
+
             } else {
                 setHeart(0);
             }
@@ -166,7 +171,9 @@ const Mess = ({ messObj, isOwner, userObj }) => {
     const onMentionClick = () => {
         setNewMess(newMess + "@");
     }
-    return (
+
+    return (<>
+        <head><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" /></head>
         <div className="messContainer">
             <div className="messProfile">
                 <div className="profilePhoto" onClick={onProfileClick}>
@@ -182,11 +189,15 @@ const Mess = ({ messObj, isOwner, userObj }) => {
                 </span>
                 {isOwner && !editing && (
                     <>
-                        <Modal>
-                            <div className="modalChildren">
-                                <button onClick={toggleEditing}>수정</button>
-                                <button id="delBtn" onClick={onDelClick}>삭제</button>
-                            </div>
+                        <Modal setIsOpenModal={setIsOpenModal}>
+                            {!isOpenModal ? <FontAwesomeIcon id="modalLabel" icon={faEllipsisV} /> :
+
+                                <div className="modalChildren">
+                                    <button onClick={toggleEditing}>수정</button>
+                                    <button id="delBtn" onClick={onDelClick}>삭제</button>
+                                </div>
+                            }
+
                         </Modal>
 
                     </>)}
@@ -200,7 +211,7 @@ const Mess = ({ messObj, isOwner, userObj }) => {
 
                         {!messObj.attachmentURL && <label for="attach-file2" className="file_label file_label3"><FontAwesomeIcon icon={faPlus} /></label>}
 
-                        <TextareaAutosize id="messText" onChange={onChange} value={newMess} type="text" required />
+                        <TextareaAutosize id="TextArea" onChange={onChange} value={newMess} type="text" required />
                         <input id="attach-file2" type="file" accept="image/*" onChange={onFileChange} style={{ display: 'none' }} />
                         {messObj.attachmentURL && <div>
                             <span id="attachmentDel" onClick={onDelPhotoClick}>사진 삭제</span>
@@ -236,9 +247,10 @@ const Mess = ({ messObj, isOwner, userObj }) => {
                         {isHeart ? <FontAwesomeIcon id="icon" icon={faHeart} color="#a84848" onClick={onHeartClick} /> : <FontAwesomeIcon id="icon" icon={faHeart} onClick={onHeartClick} />}
                         <span>{heart}</span>
                     </div>
+                    <Comment messObj={messObj} userObj={userObj} />
                 </>
             }
-        </div>
+        </div></>
     );
 }
 export default Mess;

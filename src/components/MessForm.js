@@ -13,6 +13,7 @@ const MessForm = ({ userObj }) => {
         fromName: null,
         toName: null,
     });
+
     const onSubmit = async (event) => {
         if (mess === "") return;
 
@@ -37,14 +38,13 @@ const MessForm = ({ userObj }) => {
         }
         await dbService.collection("Messages").add(messObj);//add this doc to collection named "messages" 
         await dbService.collection("Mess_More").doc(`${messObj.id}`).set({
-                heart:0,
-                heart_ID: null,
+            heart: 0,
+            heart_ID: null,
         });
         if (mention) {
 
             const getCollection = await dbService.collection("User_Profile").where("displayName", "==", mention).get();
             getCollection.docs.map((doc) => {
-                console.log(doc.id)
                 dbService.doc(`User_Profile/${doc.id}`).update({
                     Alert: true,
                 })
@@ -67,7 +67,7 @@ const MessForm = ({ userObj }) => {
 
             setMention(ment.substring(1, ment.length));
             setMentionObj({
-                text: "님이 언급하셨습니다.",//textfield's text
+                text: "님이 언급하셨습니다.",
                 fromName: userObj.displayName,
                 toName: ment.substring(1, ment.length),
             })
@@ -102,7 +102,7 @@ const MessForm = ({ userObj }) => {
                 <label for="attach-file" className="file_label">
                     <FontAwesomeIcon icon={faPlus} />
                 </label>
-                <TextareaAutosize id="messText" value={mess} onChange={onChange} type="text" placeholder="What are you doing?" />
+                <TextareaAutosize id="TextArea" value={mess} onChange={onChange} type="text" placeholder="What are you doing?" />
                 <input id="messSubmit" type="submit" value="&#xf054;" />
 
             </div>

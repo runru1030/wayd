@@ -23,6 +23,7 @@ function App() {
             email: user.email,
             password: "",
             instagramId: "",
+            photoURL: user.photoURL,
           });
         }
 

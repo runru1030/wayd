@@ -18,8 +18,6 @@ const Home = ({ userObj }) => {
 
     }, []);
 
-
-
     return (
         <div className="Container">
             <img id="logo" name="home" src="logo.png" width="150px" />

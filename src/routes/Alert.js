@@ -2,13 +2,9 @@ import Mess from 'components/Mess';
 import Modal2 from 'components/Modal2';
 import { dbService } from 'fbase';
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router';
-
 export default ({ userObj }) => {
 
-    const [alerts, setAlerts] = useState([]);//to show all messages in db
-    const location = useLocation();
-
+    const [alerts, setAlerts] = useState([]);
 
     useEffect(async () => {
         dbService.collection("Messages").where("toName", "==", userObj.displayName).orderBy("createAt").onSnapshot((snapshot) => {
@@ -31,7 +27,6 @@ export default ({ userObj }) => {
 
 
     }, []);
-
     return (
         <>
             <div className="Container">

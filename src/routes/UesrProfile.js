@@ -5,7 +5,7 @@ import { useLocation } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInstagram } from "@fortawesome/free-brands-svg-icons";;
 
-export default () => {
+export default ({ userObj }) => {
     const [Profile, setProfile] = useState([]);
     const [messages, setmessages] = useState([]);
     const [instaLink, setinstaLink] = useState("");
@@ -14,10 +14,8 @@ export default () => {
     const location = useLocation();
 
     useEffect(() => {
-        const getProfile = location.state.ProfileObj.ProfileObj;
-        const photoURL = location.state.messObj.messObj.creatorPhoto;
-
-        setPhoto(photoURL);
+        const getProfile = location.state.ProfileObj;
+        setPhoto(getProfile.photoURL);
         setProfile(getProfile);
         setinstaLink(`https://www.instagram.com/${getProfile.instagramId}`)
         getMesses(getProfile);
@@ -30,14 +28,12 @@ export default () => {
             .where("creatorEmail", "==", Profile.email)
             .orderBy("createAt")
             .get();
-        console.log(messes)
         const messesArr = messes.docs.map((doc) => ({
             id: doc.id,
             ...doc.data()
         }));
 
         setmessages(messesArr);
-        console.log(messesArr);
     }
     return (
         <>
@@ -54,7 +50,7 @@ export default () => {
                 <span>{Profile.displayName}의 작성글</span>
                 <div>
                     {messages.map((mess) => (
-                        <Mess key={mess.id} messObj={mess} isOwner="false" />
+                        <Mess key={mess.id} messObj={mess} userObj={userObj} isOwner="false" />
                     )).reverse()}
                 </div>
 

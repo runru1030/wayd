@@ -12,7 +12,7 @@ export default ({ refreshUser, userObj, ProfileObj }) => {
     const [messages, setmessages] = useState([]);
     const [editing, setEditing] = useState(false);
     const [checkError, setCheckError] = useState("");
-    const [dpNameCheck, setDpNameCheck] = useState(false);
+    const [dpNameCheck, setDpNameCheck] = useState(true);
     const [error, setError] = useState("");
 
     const instaLink = `https://www.instagram.com/${ProfileObj.instagramId}`;
@@ -56,7 +56,7 @@ export default ({ refreshUser, userObj, ProfileObj }) => {
                 .collection("User_Profile")
                 .where("displayName", "==", value)
                 .get();
-            if (IDcheck.docs.length == 0 && value.length > 0) {
+            if ((IDcheck.docs.length == 0 && Profile.displayName.length > 0) || value == ProfileObj.displayName) {
                 setCheckError("사용가능");
                 setDpNameCheck(true);
             }
@@ -72,8 +72,8 @@ export default ({ refreshUser, userObj, ProfileObj }) => {
     const onSubmit = async (event) => {
         event.preventDefault();
         let attachmentURL = "";
-        console.log(attachment);
         const user = authService.currentUser;
+        setError("");
         try {
             if (!dpNameCheck) throw new Error('Display Name을 확인해주세요.');
             if (attachment !== "") {
@@ -87,6 +87,7 @@ export default ({ refreshUser, userObj, ProfileObj }) => {
                 displayName: Profile.displayName,
                 name: Profile.name,
                 instagramId: Profile.instagramId,
+                photoURL: attachmentURL,
             });
 
             await user.updateProfile({
@@ -94,12 +95,12 @@ export default ({ refreshUser, userObj, ProfileObj }) => {
                 photoURL: attachmentURL,
             });
 
-            refreshUser();
             setEditing(false);
-        } catch (erorr) {
+        } catch (error) {
             setError(error.message);
         }
 
+        refreshUser();
     }
     const onFileChange = (event) => {
         const { target: { files } } = event;

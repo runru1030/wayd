@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Children, Component } from 'react';
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsisV } from "@fortawesome/free-solid-svg-icons";
@@ -46,8 +46,10 @@ export default class Modal extends Component {
       })
     }
   }
-
   render() {
-    return <div ref={this.setWrapperRef} className="modal">{!this.state.isOpenMoal && <FontAwesomeIcon id="modalLabel" icon={faEllipsisV} />}{this.state.isOpenMoal && this.props.children}</div>;
+    return <div ref={this.setWrapperRef} value={this.props.setIsOpenModal(this.state.isOpenMoal)} className="modal">
+      {this.props.children}
+
+    </div>;
   }
 }

@@ -138,7 +138,7 @@ hr{
     transform: translate(15px,-12px);
     padding: 0;
 }
-#messText{
+#TextArea{
     width: 60%;
     padding: 10px 15px;
     padding-right: 60px;
@@ -152,7 +152,7 @@ hr{
     font-family: 'Roboto', sans-serif;
     color: white;
 }
-.editForm #messText{
+.editForm #TextArea{
     background-color: rgba(255, 255, 255, 0);
     width: 70%;
     margin: 10px;
@@ -272,6 +272,7 @@ nav{
     width: 100%;
     background-color: #1d1d1d;
     padding: 15px;
+    z-index: 999;
 }
 nav a{
     font-size: large;
@@ -490,3 +491,59 @@ footer hr{
     font-size: xx-small;
     transform: translate(25px,-15px);
 }
+/*Comment*/
+.commentFac{
+    width: 440%;
+    transform: translate(-70px,30px);
+    border-top: thin solid #424242;
+}
+.commentFacForm{
+    display: flex;
+    width: 95%;
+    margin-top: 5px;
+}
+#commentSubmit{
+    font-family: "FontAwesome";
+    margin: 0;
+    padding: 0;
+}
+.commentFac #TextArea{
+    width: 100%;
+    margin: 10px;
+    padding: 5px 10px;
+    border: thin solid #424242;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0);
+}
+#commentIcon{
+    position: absolute;
+    transform: translate(-30px,-15px);
+    font-size: small;
+    margin: 10px;
+}
+
+.commentContainer{
+    width: 92%;
+    padding: 10px;
+}
+.commentContainer .moreDiv{
+    display: flex;
+    margin-left: 30px;
+}
+.commentContainer .moreDiv span{
+    padding: 5px;
+    color: rgba(255, 255, 255, 0.268);
+}
+
+.comnentProfile .profilePhoto{
+    width: 20px;
+    height: 20px;
+    border: none;
+}
+.commentContainer #text{
+    margin: 5px;
+}
+/* .commentDel{
+    transform: translate(80px,-15px);
+    color:rgba(255, 255, 255, 0.438);
+} */
