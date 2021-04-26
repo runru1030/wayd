@@ -130,11 +130,12 @@ export default ({ getMyProfile }) => {
                             <input id="changefile" type="file" accept="image/*" onChange={onFileChange} style={{ display: 'none' }} />
                         </div>
                         <div className="centerContainer editWrapper">
+                            
+                        <span id="checkMess">{checkError}</span>
                             <div className="editBox">
                                 <span>사용자 이름</span>
                                 <input name="displayName" type="text" placeholder={ProfileOrigin.displayName} onChange={onChange} />
                             </div>
-                            <span id="checkMess">{checkError}</span>
 
                             <div className="editBox">
                                 <span>이름</span>

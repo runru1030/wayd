@@ -378,17 +378,24 @@ p{
     font-size: small;
     width: 190px;
     color: white;
-    
     padding: 10px 5px;
+    margin-top: 0;
+}
+.editBox input[name=displayName]{
+    border: none;
 }
 .editBox span{
     width: 120px;
     font-size: small;
     margin-right: 0;
 }
+.editProfileForm #checkMess{
+    margin-left: 150px;
+}
 .editWrapper{
     flex-direction: column;
     margin-bottom: 20px;
+    padding: 0;
     border-top: thin solid #5c5c5c;
     border-bottom: thin solid #5c5c5c;
 }
