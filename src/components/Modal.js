@@ -1,16 +1,10 @@
-import React, { Children, Component } from 'react';
-
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEllipsisV } from "@fortawesome/free-solid-svg-icons";
+import React, { Component } from 'react';
 export default class Modal extends Component {
   constructor(props) {
     super(props);
-
     this.setWrapperRef = this.setWrapperRef.bind(this);
     this.handleClickOutside = this.handleClickOutside.bind(this);
-
-    this.state =
-    {
+    this.state = {
       isOpenMoal: false,
     };
 

@@ -2,46 +2,42 @@ import Mess from 'components/Mess';
 import Modal2 from 'components/Modal2';
 import { dbService } from 'fbase';
 import React, { useEffect, useState } from 'react';
-export default ({ userObj }) => {
+export default () => {
+    const Profile = JSON.parse(window.localStorage.getItem("ProfileObj")) || 0;
+    const [messObj, setMessObj] = useState([]);
+    useEffect(() => {
+        dbService.collection("User_Alert").doc(`${Profile.uid}`).get().then(async (doc) => {
+            if (doc.exists) {
+                dbService.collection("User_Alert").doc(`${Profile.uid}`).update({
+                    Alert: false,
+                })
+                await doc.data().alertObj.map(async (it) => {
+                    await dbService.collection("Messages").doc(`${it.messId}`).get().then(
+                        (doc) => {
+                            const id = doc.id;
+                            setMessObj((messObj) => [...messObj, { alertObj: it, messObj: { ...doc.data(), id: id } }])
+                        }
+                    )
+                })
+            }
 
-    const [alerts, setAlerts] = useState([]);
-
-    useEffect(async () => {
-        dbService.collection("Messages").where("toName", "==", userObj.displayName).orderBy("createAt").onSnapshot((snapshot) => {
-            const alertArr = snapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
-            setAlerts(alertArr);
-        })
-
-        const userProfile = await dbService
-            .collection("User_Profile")
-            .where("displayName", "==", userObj.displayName)
-            .get();
-        userProfile.docs.map((doc) => {
-            dbService.doc(`User_Profile/${doc.id}`).update({
-                Alert: false,
-            })
-        })
-
-
+        });
     }, []);
+
+    console.log(messObj)
     return (
         <>
             <div className="Container">
-
-                {alerts.map((alert) => (<>
-                    <div className="alertForm">
-                        <span id="alerts">{alert.mentionObj.fromName}{alert.mentionObj.text}</span>
+                {messObj.map((it) =>
+                (<>
+                    <div className="centerContainer alertForm">
+                        <span id="alerts">{it.alertObj.text}</span>
                         <Modal2>
-                            <Mess key={alert.id} messObj={alert} userObj={userObj} isOwner={alert.creatorId == userObj.uid} />
+                            <Mess key={it.messObj.id} messObj={it.messObj} ProfileObj={Profile} isOwner={it.messObj.creatorId == Profile.uid} />
                         </Modal2>
-
                     </div>
-                </>
-
-                )).reverse()}
+                </>)
+                ).reverse()}
             </div>
         </>
     );

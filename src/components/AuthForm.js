@@ -9,13 +9,14 @@ const AuthForm = () => {
         password: "",
         instagramId: "",
         photoURL: "",
+        uid: ""
     });
     const [newAccount, setNewAccount] = useState("");
     const [dpNameCheck, setDpNameCheck] = useState(false);
     const [checkError, setCheckError] = useState("");
     const [error, setError] = useState("");
 
-    
+
     const onChange = async (event) => {
         const { target: { name, value } } = event;
         setAuthObj(authObj => ({ ...authObj, [name]: value }))
@@ -40,7 +41,6 @@ const AuthForm = () => {
 
     const onSubmit = async (event) => {
         event.preventDefault();
-
         try {
             let data;
             if (newAccount) {

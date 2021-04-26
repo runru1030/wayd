@@ -5,80 +5,65 @@ import AppRouter from './Router';
 
 function App() {
   const [init, setinit] = useState(false);
-  const [userObj, setUserObj] = useState(null);//for using anywhere define here
-  const [ProfileObj, setProfileObj] = useState(null);
+  const [isLoggedin, setIsLoggedin] = useState(false);//for using anywhere define here
+  const [ProfileObj, setProfileObj] = useState([]);
 
   useEffect(() => {
     authService.onAuthStateChanged(async (user) => {
       if (user) {
-        //for provider user
-        const myProfile = await dbService
-          .collection("User_Profile")
-          .where("email", "==", user.email)
-          .get();
-        if (myProfile.docs.length == 0) {
-          await dbService.collection("User_Profile").add({
-            displayName: user.displayName,
-            name: "",
-            email: user.email,
-            password: "",
-            instagramId: "",
-            photoURL: user.photoURL,
-          });
-        }
+        dbService.collection("User_Profile").where("email", "==", user.email).get().then((get) => {
+          if (get.docs == "") {
+            dbService.collection("User_Profile").add({
+              displayName: user.displayName,
+              name: "",
+              email: user.email,
+              password: "",
+              instagramId: "",
+              photoURL: user.photoURL,
+              uid: user.uid
+            });
+          }
+          else {
+            get.docs.map(async (doc) => {
+              if (doc.exists && doc.data().uid == "") {
+                await dbService
+                  .collection("User_Profile")
+                  .doc(`${doc.id}`)
+                  .update({
+                    uid: user.uid
+                  })
+              }
+            })
+          }
 
-        setUserObj({
-          displayName: user.displayName,
-          uid: user.uid,
-          email: user.email,
-          photoURL: user.photoURL,
-          updateProfile: (args) => user.updateProfile(args),
         });
-        getMyProfile(user.email);
+        getMyProfile();
+        setIsLoggedin(true);
       }
-      else setUserObj(null);
+      else setIsLoggedin(false);
 
       setinit(true);
     })
 
   }, []);
-
-
-  const getMyProfile = async (email) => {
-    const myProfile = await dbService
-      .collection("User_Profile")
-      .where("email", "==", email)
-      .get();
-    const profileArr = myProfile.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-    setProfileObj(profileArr[0]);
-  }
-  const refreshUser = async () => {
+  const getMyProfile = async () => {
     const user = authService.currentUser;
-    setUserObj({
-      displayName: user.displayName,
-      uid: user.uid,
-      email: user.email,
-      photoURL: user.photoURL,
-      updateProfile: (args) => user.updateProfile(args),
-    });
-    const myProfile = await dbService
+    const arr = await dbService
       .collection("User_Profile")
       .where("email", "==", user.email)
       .get();
-    const profileArr = myProfile.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    arr.docs.map((doc) => {
+      const get = { docId: doc.id, ...doc.data(), uid: user.uid };
+      setProfileObj(get);
+      window.localStorage.setItem("ProfileObj", JSON.stringify(get))
+    });
 
-    setProfileObj(profileArr[0]);
   }
 
   return (
     <>
-      {init ? <AppRouter isLoggedin={Boolean(userObj)} userObj={userObj} refreshUser={refreshUser} ProfileObj={ProfileObj} /> : <span>Loading..</span>}
+      <head><meta name="viewport" content="width=device-width, initial-scale=1.0 user-scalable=no" /></head>
+      {init ? <AppRouter isLoggedin={isLoggedin} getMyProfile={getMyProfile} ProfileObj={ProfileObj} /> : <span>Loading..</span>}
       <footer className="centerContainer"><hr />&copy; WAYD {new Date().getFullYear()} by keeper</footer>
     </>
   );

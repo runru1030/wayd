@@ -2,12 +2,9 @@ import React, { Component } from 'react';
 export default class Modal2 extends Component {
   constructor(props) {
     super(props);
-
     this.setWrapperRef = this.setWrapperRef.bind(this);
     this.handleClickOutside = this.handleClickOutside.bind(this);
-
-    this.state =
-    {
+    this.state ={
       isOpenMoal: false,
     };
 

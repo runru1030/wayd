@@ -9,26 +9,56 @@ import { faAt, faPlus, faHeart, faEllipsisV } from "@fortawesome/free-solid-svg-
 import Modal from "./Modal";
 import Comment from "./Comment";
 
-const Mess = ({ messObj, isOwner, userObj }) => {
+const Mess = ({ messObj, isOwner, ProfileObj }) => {
     const [editing, setEditing] = useState(false);
     const [newMess, setNewMess] = useState(messObj.text);
     const [attachment, setAttachment] = useState("");
-    const [mention, setMention] = useState(messObj.mentionObj.toName);
+    const [mention, setMention] = useState(messObj.toName);
     const [mentionObj, setMentionObj] = useState({
         text: "",//textfield's text
         fromName: null,
         toName: null,
+        type: "mention",
+        messId: messObj.id,
     });
+
     const [isHeart, setIsHeart] = useState(false);
     const [heart, setHeart] = useState(0);
     const [isOpenModal, setIsOpenModal] = useState(false);
 
     const history = useHistory();
+    useEffect(() => {
+        dbService.doc(`Mess_More/${messObj.id}`).onSnapshot(async (doc) => {
+            if (doc.exists) {
+                setHeart(doc.data().heart);
+                if (doc.data().heart_ID.includes(ProfileObj.uid)) setIsHeart(true);
+                else setIsHeart(false);
+
+            } else {
+                setHeart(0);
+            }
+        });
+    }, [])
     const onDelClick = async () => {
         const ok = window.confirm("내용을 정말 삭제하시겠습니까?");
         if (ok) {
+            await dbService.collection("User_Alert").get().then((get) => {
+                get.docs.map((doc) => {
+                    dbService.collection("User_Alert").doc(doc.id).update({
+                        alertObj: doc.data().alertObj.filter((alert) => alert.messId != messObj.id)
+                    })
+                })
+            })
+            dbService.collection(`${messObj.id}`).onSnapshot((snapshot) => {
+                snapshot.docs.forEach((doc) => {
+                    console.log(doc)
+                    dbService.collection(`${messObj.id}`).doc(doc.id).delete()
+                })
+            })
+            if(messObj.attachmentURL)await storageService.refFromURL(messObj.attachmentURL).delete();
             await dbService.doc(`Messages/${messObj.id}`).delete();
-            await storageService.refFromURL(messObj.attachmentURL).delete();
+            await dbService.doc(`Mess_More/${messObj.id}`).delete();
+
         }
     }
     const onDelPhotoClick = async () => {
@@ -47,7 +77,7 @@ const Mess = ({ messObj, isOwner, userObj }) => {
         else {
             const userProfile = await dbService
                 .collection("User_Profile")
-                .where("email", "==", messObj.creatorEmail)
+                .where("uid", "==", messObj.creatorId)
                 .get();
             const profileArr = userProfile.docs.map((doc) => ({
                 id: doc.id,
@@ -55,7 +85,7 @@ const Mess = ({ messObj, isOwner, userObj }) => {
             }))
             history.push({
                 pathname: "/userProfile",
-                state: { ProfileObj: profileArr[0]}
+                state: { ProfileObj: profileArr[0] }
             });
         }
     }
@@ -63,6 +93,7 @@ const Mess = ({ messObj, isOwner, userObj }) => {
     const toggleEditing = () => {
         setEditing((prev) => !prev)
         setNewMess(messObj.text);
+        setMention(messObj.toName);
     }
 
     const onSubmit = async (event) => {
@@ -76,18 +107,47 @@ const Mess = ({ messObj, isOwner, userObj }) => {
         else {
             attachmentURL = messObj.attachmentURL;
         }
-        if (mention && messObj.mentionObj.toName != mention) {
-            const getCollection = await dbService.collection("User_Profile").where("displayName", "==", mention).get();
-            getCollection.docs.map((doc) => {
-                dbService.doc(`User_Profile/${doc.id}`).update({
-                    Alert: true,
+
+        if (mention != ProfileObj.displayName) {
+            if (mention && messObj.toName != mention) {
+                await dbService.collection("User_Profile").where("displayName", "==", mention).get().then((doc) => {
+                    doc.docs.map(async (get) => {
+                        await dbService.collection("User_Alert").doc(`${get.data().uid}`).get().then((doc) => {
+                            if (doc.exists) {
+                                dbService.collection("User_Alert").doc(`${get.data().uid}`).update({
+                                    Alert: true,
+                                    alertObj: doc.data().alertObj.map((alert) => { if ((alert.messId == messObj.id) && (alert.type == "mention")) alert = mentionObj })
+                                })
+                            }
+                            else {
+                                dbService.collection("User_Alert").doc(`${get.data().uid}`).set({
+                                    Alert: true,
+                                    alertObj: [mentionObj]
+                                })
+                            }
+
+                        })
+                    })
                 })
-            })
+
+            }
+            else if (!mention) {
+                await dbService.collection("User_Profile").where("displayName", "==", mention).get().then((doc) => {
+                    doc.docs.map(async (doc) => {
+                        await dbService.collection("User_Alert").doc(`${doc.data().uid}`).get().then((doc) => {
+                            if (doc.exists) {
+                                dbService.collection("User_Alert").doc(`${doc.data().uid}`).update({
+                                    alertObj: doc.data().alertObj.filter((alert) => (alert.messId != messObj.id) || (alert.type != "mention"))
+                                })
+                            }
+                        })
+                    })
+                })
+            }
         }
         await dbService.doc(`Messages/${messObj.id}`).update({
             text: newMess,
-            toName: mentionObj.toName,
-            mentionObj: mentionObj,
+            toName: mention,
             attachmentURL,
         });
 
@@ -96,16 +156,17 @@ const Mess = ({ messObj, isOwner, userObj }) => {
     }
 
     const onChange = (event) => {
-        const { target: { value, name } } = event;
+        const { target: { value } } = event;
         setNewMess(value);
-        var idx = value.search("@");
-        if (idx != -1) {
+        if (value.search("@") != -1) {
             const ment = value.split(" ").filter(it => it.includes("@")).toString();
-            setMention(ment.substring(1, ment.length));
+            setMention(ment.substring(ment.search("@") + 1, ment.length));
             setMentionObj({
-                text: "님이 언급하셨습니다.",//textfield's text
-                fromName: userObj.displayName,
-                toName: ment.substring(1, ment.length),
+                text: `${ProfileObj.displayName}님이 언급하셨습니다.`,
+                fromName: ProfileObj.displayName,
+                toName: ment.substring(ment.search("@") + 1, ment.length),
+                type: "mention",
+                messId: messObj.id,
             })
         }
     };
@@ -124,54 +185,34 @@ const Mess = ({ messObj, isOwner, userObj }) => {
 
     const onClearAttachment = () => setAttachment("")
     const onHeartClick = async () => {
-
         if (isHeart) {
             await dbService.doc(`Mess_More/${messObj.id}`).get().then(async (doc) => {
                 await dbService.doc(`Mess_More/${messObj.id}`).update({
                     heart: doc.data().heart - 1,
-                    heart_ID: doc.data().heart_ID.filter(it => it != userObj.uid)
+                    heart_ID: doc.data().heart_ID.filter(it => it != ProfileObj.uid)
                 })
-
             });
-
         }
         else {
             await dbService.doc(`Mess_More/${messObj.id}`).get().then(async (doc) => {
                 if (doc.exists) {
                     await dbService.collection("Mess_More").doc(`${messObj.id}`).set({
                         heart: doc.data().heart + 1,
-                        heart_ID: [...doc.data().heart_ID, userObj.uid]
+                        heart_ID: [...doc.data().heart_ID, ProfileObj.uid]
                     })
                 } else {
                     await dbService.collection("Mess_More").doc(`${messObj.id}`).set({
                         heart: 1,
-                        heart_ID: [userObj.uid]
+                        heart_ID: [ProfileObj.uid]
                     })
                 }
-
             });
-
         }
-
     }
-    useEffect(() => {
-        dbService.doc(`Mess_More/${messObj.id}`).onSnapshot(async (doc) => {
-            if (doc.exists) {
-                setHeart(doc.data().heart);
-                if (doc.data().heart_ID.includes(userObj.uid)) setIsHeart(true);
-                else setIsHeart(false);
 
-
-            } else {
-                setHeart(0);
-            }
-
-        });
-    }, [])
     const onMentionClick = () => {
         setNewMess(newMess + "@");
     }
-
     return (<>
         <head><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" /></head>
         <div className="messContainer">
@@ -197,23 +238,24 @@ const Mess = ({ messObj, isOwner, userObj }) => {
                                     <button id="delBtn" onClick={onDelClick}>삭제</button>
                                 </div>
                             }
-
                         </Modal>
-
                     </>)}
             </div>
 
             {editing ?
                 <>
                     <form onSubmit={onSubmit} className="editForm">
-                        <span onClick={onMentionClick} id="addMention"><FontAwesomeIcon icon={faAt} id="at" /></span>
+
                         {mention && <div className="mention"><span>To : <FontAwesomeIcon icon={faAt} id="at" /> {mention}</span></div>}
 
-                        {!messObj.attachmentURL && <label for="attach-file2" className="file_label file_label3"><FontAwesomeIcon icon={faPlus} /></label>}
+                        {!messObj.attachmentURL && <div className="noneAttachClass">
+                            <span onClick={onMentionClick} id="addMention"><FontAwesomeIcon icon={faAt} id="at" /></span>
+                            <label for="attach-file2" className="file_label file_label3"><FontAwesomeIcon icon={faPlus} /></label></div>}
 
                         <TextareaAutosize id="TextArea" onChange={onChange} value={newMess} type="text" required />
                         <input id="attach-file2" type="file" accept="image/*" onChange={onFileChange} style={{ display: 'none' }} />
-                        {messObj.attachmentURL && <div>
+                        {messObj.attachmentURL && <div className="attachClass">
+                            <span onClick={onMentionClick} id="addMention"><FontAwesomeIcon icon={faAt} id="at" /></span>
                             <span id="attachmentDel" onClick={onDelPhotoClick}>사진 삭제</span>
                             <img src={messObj.attachmentURL} width="100%" />
                         </div>}
@@ -232,14 +274,8 @@ const Mess = ({ messObj, isOwner, userObj }) => {
                 :
                 <>
                     {mention && <div className="mention"><span>To : <FontAwesomeIcon icon={faAt} id="at" /> {mention}</span></div>}
-
                     <div className="messContent">{messObj.text.split("\n").map((line) => {
-                        return (
-                            <h4>
-                                {line.split(" ").filter(it => !it.includes("@"))}
-                                <br />
-                            </h4>
-                        );
+                        return (<h4>{line.split(`@${mention}`)}<br /></h4>);
                     })}
                     </div>
                     {messObj.attachmentURL && <img src={messObj.attachmentURL} className="attachment2" />}
@@ -247,7 +283,7 @@ const Mess = ({ messObj, isOwner, userObj }) => {
                         {isHeart ? <FontAwesomeIcon id="icon" icon={faHeart} color="#a84848" onClick={onHeartClick} /> : <FontAwesomeIcon id="icon" icon={faHeart} onClick={onHeartClick} />}
                         <span>{heart}</span>
                     </div>
-                    <Comment messObj={messObj} userObj={userObj} />
+                    <Comment messObj={messObj} ProfileObj={ProfileObj} />
                 </>
             }
         </div></>

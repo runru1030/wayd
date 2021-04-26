@@ -7,25 +7,25 @@ import Profile from "routes/Profile";
 import UesrProfile from "routes/UesrProfile";
 import Alert from "routes/Alert";
 
-const AppRouter = ({ isLoggedin, userObj, refreshUser, ProfileObj }) => {
+const AppRouter = ({ isLoggedin, getMyProfile, ProfileObj }) => {
 
     return (
         <Router>
-            {isLoggedin && <Navigation userObj={userObj} />}
+            {isLoggedin && <Navigation ProfileObj={ProfileObj} />}
             <Switch>
                 {isLoggedin ? (
                     <>
                         <Route exact path="/">
-                            <Home userObj={userObj} />
+                            <Home ProfileObj={ProfileObj} />
                         </Route>
                         <Route exact path="/profile">
-                            <Profile userObj={userObj} refreshUser={refreshUser} ProfileObj={ProfileObj} />
+                            <Profile getMyProfile={getMyProfile} ProfileObj={ProfileObj} />
                         </Route>
                         <Route exact path="/userProfile">
-                            <UesrProfile userObj={userObj} />
+                            <UesrProfile ProfileObj={ProfileObj} />
                         </Route>
                         <Route exact path="/alert">
-                            <Alert userObj={userObj} />
+                            <Alert ProfileObj={ProfileObj} />
                         </Route>
                     </>
                 ) : (

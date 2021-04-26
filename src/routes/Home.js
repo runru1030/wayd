@@ -3,7 +3,7 @@ import MessForm from "components/MessForm";
 import { dbService } from "fbase";
 import { useEffect, useState } from "react";
 
-const Home = ({ userObj }) => {
+const Home = ({ ProfileObj }) => {
 
     const [messages, setmessages] = useState([]);//to show all messages in db
 
@@ -15,16 +15,14 @@ const Home = ({ userObj }) => {
             })); //get messages from db
             setmessages(messArr);//set messages to show all messages in db
         })
-
     }, []);
-
     return (
         <div className="Container">
             <img id="logo" name="home" src="logo.png" width="150px" />
-            <MessForm userObj={userObj} />
+            <MessForm ProfileObj={ProfileObj} />
             <div className="messCotainer1">
                 {messages.map((mess) => (
-                    <Mess key={mess.id} messObj={mess} userObj={userObj} isOwner={mess.creatorId == userObj.uid} />
+                    <Mess key={mess.id} messObj={mess} ProfileObj={ProfileObj} isOwner={mess.creatorId == ProfileObj.uid} />
                 )).reverse()}
             </div>
         </div>

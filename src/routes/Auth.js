@@ -1,14 +1,9 @@
 import AuthForm from "components/AuthForm";
 import { authService, dbService, firebaseInstance } from "fbase";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-    faGoogle,
-    faGithub,
-} from "@fortawesome/free-brands-svg-icons";
-;
+import { faGoogle, faGithub } from "@fortawesome/free-brands-svg-icons";
+
 const Auth = () => {
-
-
     const onSocialClick = async (event) => {
         const { target: { name }, } = event;
         let provider;
@@ -32,12 +27,9 @@ const Auth = () => {
                     });
                 }
             });
-
     }
     return (
-
         <div className="Container">
-
             <img id="logo" src="logo.png" width="150px" />
             <AuthForm />
             <hr />
@@ -46,7 +38,6 @@ const Auth = () => {
                 <button onClick={onSocialClick} name="google" ><FontAwesomeIcon icon={faGoogle} /> </button>
                 <button onClick={onSocialClick} name="github"><FontAwesomeIcon icon={faGithub} /></button>
             </div>
-
         </div>
 
     );

@@ -1,31 +1,34 @@
 import Mess from "components/Mess";
 import { dbService } from "fbase";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router";
+import { useHistory, useLocation } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInstagram } from "@fortawesome/free-brands-svg-icons";;
 
-export default ({ userObj }) => {
+export default ({ProfileObj }) => {
     const [Profile, setProfile] = useState([]);
     const [messages, setmessages] = useState([]);
     const [instaLink, setinstaLink] = useState("");
-    const [photo, setPhoto] = useState("");
-
     const location = useLocation();
+    const history = useHistory();
 
     useEffect(() => {
-        const getProfile = location.state.ProfileObj;
-        setPhoto(getProfile.photoURL);
-        setProfile(getProfile);
-        setinstaLink(`https://www.instagram.com/${getProfile.instagramId}`)
-        getMesses(getProfile);
+        if(window.performance.navigation.type==1){
+            history.push("/")
+        }
+        else{
+            const getProfile = location.state.ProfileObj;
+            setProfile(getProfile);
+            setinstaLink(`https://www.instagram.com/${getProfile.instagramId}`)
+            getMesses(getProfile);
+        }
+      
 
     }, []);
     const getMesses = async (Profile) => {
-
         const messes = await dbService
             .collection("Messages")
-            .where("creatorEmail", "==", Profile.email)
+            .where("creatorId", "==", Profile.uid)
             .orderBy("createAt")
             .get();
         const messesArr = messes.docs.map((doc) => ({
@@ -38,9 +41,11 @@ export default ({ userObj }) => {
     return (
         <>
             <div className="Container">
+                
+            <span id="userProfileName">{Profile.displayName}</span>
                 <div className="showProfile">
                     <div className="profilePhoto">
-                        <img src={photo ? photo : "user.png"} />
+                        <img src={Profile.photoURL ? Profile.photoURL : "user.png"} />
                     </div>
                     <ul>
                         <li>{Profile.name}</li>
@@ -50,7 +55,7 @@ export default ({ userObj }) => {
                 <span>{Profile.displayName}의 작성글</span>
                 <div>
                     {messages.map((mess) => (
-                        <Mess key={mess.id} messObj={mess} userObj={userObj} isOwner="false" />
+                        <Mess key={mess.id} messObj={mess} ProfileObj={ProfileObj} isOwner={false} />
                     )).reverse()}
                 </div>
 
