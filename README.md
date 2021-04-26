@@ -1,13 +1,13 @@
-# Project Name : WAYD(What Are You Doing)
+## Project Name : WAYD(What Are You Doing)
 #### Twitter's Clone Coding , twitting Meseenger Web App(트위팅 메신져 웹앱)
 using React & firebase
 
 
-## mention 및 post message, file
+## Mention & Post Message and File
 ![1](https://user-images.githubusercontent.com/70322673/116065057-92662a00-a6c1-11eb-814d-33afdfcdf7c4.gif)
 
 
-## like function for posting
+## Posting's Like function
 ![2](https://user-images.githubusercontent.com/70322673/116065417-f2f56700-a6c1-11eb-84a6-a3be4db5689f.gif)
 
 
